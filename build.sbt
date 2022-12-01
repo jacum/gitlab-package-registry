@@ -34,7 +34,7 @@ lazy val root = project
       Defaults.sbtPluginExtra("org.xerial.sbt"    % "sbt-sonatype"         % "3.9.15", "1.0", "2.12"),
       Defaults.sbtPluginExtra("com.github.sbt" % "sbt-release" % "1.1.0", "1.0", "2.12"),
       Defaults.sbtPluginExtra("no.arktekk.sbt" % "aether-deploy" % "0.27.0", "1.0", "2.12"),
-      Defaults.sbtPluginExtra("com.gilcloud"   % "sbt-gitlab"    % "0.0.6", "1.0", "2.12")
+      Defaults.sbtPluginExtra("com.gilcloud"   % "sbt-gitlab"    % "0.1.2", "1.0", "2.12")
     )
   )
   .settings(name := "gitlab-package-registry")

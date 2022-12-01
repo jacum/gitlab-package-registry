@@ -23,12 +23,11 @@ val commonSettings = Seq(
   ),
   addCompilerPlugin("com.olegpy"   %% "better-monadic-for" % "0.3.1"),
   addCompilerPlugin("org.typelevel" % "kind-projector"     % "0.13.2" cross CrossVersion.full)
-)
-
+) ++ Publish.settings
 
 lazy val root = project
   .in(file("."))
-  .settings(commonSettings)
+  .settings(commonSettings ++ Publish.settings)
   .settings(
     libraryDependencies ++= Seq(
       Defaults.sbtPluginExtra("com.jsuereth"      % "sbt-pgp"              % "2.1.1", "1.0", "2.12"),

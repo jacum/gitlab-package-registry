@@ -43,9 +43,9 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
       )
     }
 
-    val branchName = Process("git rev-parse --abbrev-ref HEAD").lineStream.headOption.getOrElse("unknown")
+    val branchName = Process("git rev-parse --abbrev-ref HEAD").lineStream.headOption
 
-    if (branchName.startsWith("release"))
+    if (branchName.exists(_.startsWith("release")))
       prepareSettings(PackageLiveRegistryUri, PackageLiveRegistryToken)
     else
       prepareSettings(PackageRegistryUri, PackageRegistryToken)

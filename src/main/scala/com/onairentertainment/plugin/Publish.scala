@@ -3,7 +3,7 @@ package com.onairentertainment.plugin
 import com.gilcloud.sbt.gitlab.{GitlabCredentials, GitlabPlugin}
 import com.onairentertainment.plugin.GitLabPackageRegistryPlugin.{
   CustomAuthHeader,
-  PackageLiveRegistryToken,
+  PackageReleasesRegistryToken,
   PackageRegistryToken
 }
 import sbt.Def
@@ -35,7 +35,7 @@ object Publish {
     val branchName = Process("git rev-parse --abbrev-ref HEAD").lineStream.headOption
 
     if (branchName.exists(_.startsWith("release")))
-      publishSettings(PackageLiveRegistryToken, 390)
+      publishSettings(PackageReleasesRegistryToken, 390)
     else
       publishSettings(PackageRegistryToken, 71)
   }

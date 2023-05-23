@@ -13,8 +13,8 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
   val PackageRegistryUri   = "PACKAGES_RW_URI"
   val PackageRegistryToken = "PACKAGES_RW_TOKEN"
 
-  val PackageLiveRegistryUri   = "PACKAGES_LIVE_RW_URI"
-  val PackageLiveRegistryToken = "PACKAGES_LIVE_RW_TOKEN"
+  val PackageReleasesRegistryUri   = "PACKAGES_LIVE_RW_URI"
+  val PackageReleasesRegistryToken = "PACKAGES_LIVE_RW_TOKEN"
 
   val CustomAuthHeader = "Private-Token"
 
@@ -37,7 +37,7 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
       Seq(
         resolvers += repository,
         csrConfiguration ~= (_.addRepositoryAuthentication(repository.name, authentication)),
-        updateClassifiers / csrConfiguration := csrConfiguration.value,
+        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(repository.name, authentication)),
         publishMavenStyle := true,
         aether.AetherKeys.aetherCustomHttpHeaders := Map(CustomAuthHeader -> token)
       )
@@ -46,7 +46,7 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
     val branchName = Process("git rev-parse --abbrev-ref HEAD").lineStream.headOption
 
     if (branchName.exists(_.startsWith("release")))
-      prepareSettings(PackageLiveRegistryUri, PackageLiveRegistryToken)
+      prepareSettings(PackageReleasesRegistryUri, PackageReleasesRegistryToken)
     else
       prepareSettings(PackageRegistryUri, PackageRegistryToken)
   }

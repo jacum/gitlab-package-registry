@@ -32,7 +32,7 @@ object Publish {
   }
 
   val Settings: Seq[Def.Setting[_]] = {
-    val branchName = Process("git rev-parse --abbrev-ref HEAD").lineStream.headOption
+    val branchName = EnvVariableHelper.getEnvironmentVariable("CI_COMMIT_BRANCH")
 
     if (branchName.exists(_.startsWith("release")))
       publishSettings(PackageReleasesRegistryToken, 390)

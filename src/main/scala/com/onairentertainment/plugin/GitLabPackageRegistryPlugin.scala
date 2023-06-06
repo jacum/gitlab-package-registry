@@ -6,8 +6,6 @@ import sbt.Keys.{csrConfiguration, publishMavenStyle, resolvers, updateClassifie
 import sbt.librarymanagement.MavenRepository
 import sbt.{AutoPlugin, PluginTrigger, Setting}
 
-import scala.sys.process.Process
-
 object GitLabPackageRegistryPlugin extends AutoPlugin {
 
   val PackageRegistryUri   = "PACKAGES_RW_URI"
@@ -22,32 +20,50 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Setting[_]] = {
 
-    def prepareSettings(registry: String, registryToken: String): Seq[Setting[_]] = {
-      val uri        = EnvVariableHelper.getRequiredEnvironmentVariable(registry)
-      val token      = EnvVariableHelper.getRequiredEnvironmentVariable(registryToken)
-      val repository = MavenRepository("gitlab", uri)
-      val authentication = Authentication(
-        user     = "user",
-        password = "password",
-        headers  = Seq((CustomAuthHeader, token)),
-        optional = false,
-        realmOpt = None
-      )
+    def prepareSettings(): Seq[Setting[_]] = {
+      val releasesRegistryUri   = EnvVariableHelper.getRequiredEnvironmentVariable(PackageReleasesRegistryUri)
+      val releasesRegistryToken = EnvVariableHelper.getRequiredEnvironmentVariable(PackageReleasesRegistryToken)
+      val releasesRegistryName  = "gitlab-releases"
+
+      val prodRegistryUri   = EnvVariableHelper.getRequiredEnvironmentVariable(PackageRegistryUri)
+      val prodRegistryToken = EnvVariableHelper.getRequiredEnvironmentVariable(PackageRegistryToken)
+      val prodRegistryName  = "gitlab-prod"
+
+      val repositories =
+        Seq(
+          MavenRepository(releasesRegistryName, releasesRegistryUri),
+          MavenRepository(prodRegistryName, prodRegistryUri)
+        )
+
+      def authentication(token: EnvVariableHelper.EnvVariable): Authentication = {
+        Authentication(
+          user     = "user",
+          password = "password",
+          headers  = Seq((CustomAuthHeader, token)),
+          optional = false,
+          realmOpt = None
+        )
+      }
+
+      val releasesAuthentication = authentication(releasesRegistryToken)
+      val prodAuthentication     = authentication(prodRegistryToken)
 
       Seq(
-        resolvers += repository,
-        csrConfiguration ~= (_.addRepositoryAuthentication(repository.name, authentication)),
-        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(repository.name, authentication)),
+        resolvers ++= repositories,
+        csrConfiguration ~= (_.addRepositoryAuthentication(releasesRegistryName, releasesAuthentication)),
+        csrConfiguration ~= (_.addRepositoryAuthentication(prodRegistryName, prodAuthentication)),
+        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(
+          releasesRegistryName,
+          releasesAuthentication
+        )),
+        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(prodRegistryName, prodAuthentication)),
         publishMavenStyle := true,
-        aether.AetherKeys.aetherCustomHttpHeaders := Map(CustomAuthHeader -> token)
+        aether.AetherKeys.aetherCustomHttpHeaders := Map(
+          CustomAuthHeader -> List(releasesRegistryToken, prodRegistryToken).mkString(",")
+        )
       )
     }
 
-    val branchName = Process("git rev-parse --abbrev-ref HEAD").lineStream.headOption
-
-    if (branchName.exists(_.startsWith("release")))
-      prepareSettings(PackageReleasesRegistryUri, PackageReleasesRegistryToken)
-    else
-      prepareSettings(PackageRegistryUri, PackageRegistryToken)
+    prepareSettings()
   }
 }

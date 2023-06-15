@@ -34,11 +34,7 @@ object Publish {
   }
 
   val Settings: Seq[Def.Setting[_]] = {
-    val branchName = EnvVariableHelper
-      .getEnvironmentVariable("CI_COMMIT_BRANCH")
-      .orElse(EnvVariableHelper.getEnvironmentVariable("CI_COMMIT_REF_NAME"))
-
-    if (branchName.exists(_.startsWith("release")))
+    if (GitBranchHelper.isReleaseBranch)
       publishSettings(PackageReleasesRegistryToken, PackageReleasesRegistryProjectId)
     else
       publishSettings(PackageRegistryToken, PackageRegistryProjectId)

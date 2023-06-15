@@ -3,8 +3,10 @@ package com.onairentertainment.plugin
 import com.gilcloud.sbt.gitlab.{GitlabCredentials, GitlabPlugin}
 import com.onairentertainment.plugin.GitLabPackageRegistryPlugin.{
   CustomAuthHeader,
-  PackageReleasesRegistryToken,
-  PackageRegistryToken
+  PackageRegistryProjectId,
+  PackageRegistryToken,
+  PackageReleasesRegistryProjectId,
+  PackageReleasesRegistryToken
 }
 import sbt.Def
 import sbt.Keys.*
@@ -26,18 +28,16 @@ object Publish {
         )
 
       case _ =>
-        println(s"$packageToken not found...")
+        println(s"$packageToken not found. Make your releases/* branch protected")
         Seq.empty
     }
   }
 
   val Settings: Seq[Def.Setting[_]] = {
-    val branchName = EnvVariableHelper.getEnvironmentVariable("CI_COMMIT_BRANCH")
-
-    if (branchName.exists(_.startsWith("release")))
-      publishSettings(PackageReleasesRegistryToken, 390)
+    if (GitBranchHelper.isReleaseBranch)
+      publishSettings(PackageReleasesRegistryToken, PackageReleasesRegistryProjectId)
     else
-      publishSettings(PackageRegistryToken, 71)
+      publishSettings(PackageRegistryToken, PackageRegistryProjectId)
   }
 
   val DoNotPublishToRegistry: Seq[Def.Setting[_]] = Seq(

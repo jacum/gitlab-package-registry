@@ -10,9 +10,11 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
 
   val PackageRegistryUri   = "PACKAGES_RW_URI"
   val PackageRegistryToken = "PACKAGES_RW_TOKEN"
+  val PackageRegistryName  = "gitlab-prod"
 
   val PackageReleasesRegistryUri   = "PACKAGES_LIVE_RW_URI"
   val PackageReleasesRegistryToken = "PACKAGES_LIVE_RW_TOKEN"
+  val PackageReleasesRegistryName  = "gitlab-releases"
 
   val CustomAuthHeader = "Private-Token"
 
@@ -51,13 +53,13 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
 
     val releaseSettings = {
       if (EnvVariableHelper.getEnvironmentVariable(PackageReleasesRegistryToken).nonEmpty)
-        prepareSettings(PackageReleasesRegistryToken, PackageReleasesRegistryUri, "gitlab-releases")
+        prepareSettings(PackageReleasesRegistryToken, PackageReleasesRegistryUri, PackageReleasesRegistryName)
       else if (branchName.exists(_.startsWith("release"))) {
         println(s"$PackageReleasesRegistryToken could not be found. Make your releases/* branch protected")
         Seq.empty[Setting[_]]
       } else Seq.empty[Setting[_]]
     }
 
-    prepareSettings(PackageRegistryToken, PackageRegistryUri, "gitlab-prod") ++ releaseSettings
+    prepareSettings(PackageRegistryToken, PackageRegistryUri, PackageRegistryName) ++ releaseSettings
   }
 }

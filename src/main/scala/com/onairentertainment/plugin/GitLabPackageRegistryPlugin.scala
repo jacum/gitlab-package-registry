@@ -11,10 +11,12 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
   val PackageRegistryUri   = "PACKAGES_RW_URI"
   val PackageRegistryToken = "PACKAGES_RW_TOKEN"
   val PackageRegistryName  = "gitlab-prod"
+  val PackageRegistryProjectId = 71
 
   val PackageReleasesRegistryUri   = "PACKAGES_LIVE_RW_URI"
   val PackageReleasesRegistryToken = "PACKAGES_LIVE_RW_TOKEN"
   val PackageReleasesRegistryName  = "gitlab-releases"
+  val PackageReleasesRegistryProjectId = 390
 
   val CustomAuthHeader = "Private-Token"
 

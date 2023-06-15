@@ -26,13 +26,15 @@ object Publish {
         )
 
       case _ =>
-        println(s"$packageToken not found...")
+        println(s"$packageToken not found. Make your releases/* branch protected")
         Seq.empty
     }
   }
 
   val Settings: Seq[Def.Setting[_]] = {
-    val branchName = EnvVariableHelper.getEnvironmentVariable("CI_COMMIT_BRANCH")
+    val branchName = EnvVariableHelper
+      .getEnvironmentVariable("CI_COMMIT_BRANCH")
+      .orElse(EnvVariableHelper.getEnvironmentVariable("CI_COMMIT_REF_NAME"))
 
     if (branchName.exists(_.startsWith("release")))
       publishSettings(PackageReleasesRegistryToken, 390)

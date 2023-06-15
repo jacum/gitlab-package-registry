@@ -20,50 +20,44 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
 
   override def projectSettings: Seq[Setting[_]] = {
 
-    def prepareSettings(): Seq[Setting[_]] = {
-      val releasesRegistryUri   = EnvVariableHelper.getRequiredEnvironmentVariable(PackageReleasesRegistryUri)
-      val releasesRegistryToken = EnvVariableHelper.getRequiredEnvironmentVariable(PackageReleasesRegistryToken)
-      val releasesRegistryName  = "gitlab-releases"
-
-      val prodRegistryUri   = EnvVariableHelper.getRequiredEnvironmentVariable(PackageRegistryUri)
-      val prodRegistryToken = EnvVariableHelper.getRequiredEnvironmentVariable(PackageRegistryToken)
-      val prodRegistryName  = "gitlab-prod"
-
-      val repositories =
-        Seq(
-          MavenRepository(releasesRegistryName, releasesRegistryUri),
-          MavenRepository(prodRegistryName, prodRegistryUri)
-        )
-
-      def authentication(token: EnvVariableHelper.EnvVariable): Authentication = {
-        Authentication(
-          user     = "user",
-          password = "password",
-          headers  = Seq((CustomAuthHeader, token)),
-          optional = false,
-          realmOpt = None
-        )
-      }
-
-      val releasesAuthentication = authentication(releasesRegistryToken)
-      val prodAuthentication     = authentication(prodRegistryToken)
-
-      Seq(
-        resolvers ++= repositories,
-        csrConfiguration ~= (_.addRepositoryAuthentication(releasesRegistryName, releasesAuthentication)),
-        csrConfiguration ~= (_.addRepositoryAuthentication(prodRegistryName, prodAuthentication)),
-        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(
-          releasesRegistryName,
-          releasesAuthentication
-        )),
-        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(prodRegistryName, prodAuthentication)),
-        publishMavenStyle := true,
-        aether.AetherKeys.aetherCustomHttpHeaders := Map(
-          CustomAuthHeader -> List(releasesRegistryToken, prodRegistryToken).mkString(",")
-        )
+    def authentication(token: EnvVariableHelper.EnvVariable): Authentication = {
+      Authentication(
+        user     = "user",
+        password = "password",
+        headers  = Seq((CustomAuthHeader, token)),
+        optional = false,
+        realmOpt = None
       )
     }
 
-    prepareSettings()
+    def prepareSettings(tokenName: String, uriName: String, registryName: String): Seq[Setting[_]] = {
+      val prodRegistryUri   = EnvVariableHelper.getRequiredEnvironmentVariable(uriName)
+      val prodRegistryToken = EnvVariableHelper.getRequiredEnvironmentVariable(tokenName)
+
+      val prodAuthentication = authentication(prodRegistryToken)
+
+      Seq(
+        resolvers += MavenRepository(registryName, prodRegistryUri),
+        csrConfiguration ~= (_.addRepositoryAuthentication(registryName, prodAuthentication)),
+        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(registryName, prodAuthentication)),
+        publishMavenStyle := true,
+        aether.AetherKeys.aetherCustomHttpHeaders := Map(CustomAuthHeader -> prodRegistryToken)
+      )
+    }
+
+    val branchName = EnvVariableHelper
+      .getEnvironmentVariable("CI_COMMIT_BRANCH")
+      .orElse(EnvVariableHelper.getEnvironmentVariable("CI_COMMIT_REF_NAME"))
+
+    val releaseSettings = {
+      if (EnvVariableHelper.getEnvironmentVariable(PackageReleasesRegistryToken).nonEmpty)
+        prepareSettings(PackageReleasesRegistryToken, PackageReleasesRegistryUri, "gitlab-releases")
+      else if (branchName.exists(_.startsWith("release"))) {
+        println(s"$PackageReleasesRegistryToken could not be found. Make your releases/* branch protected")
+        Seq.empty[Setting[_]]
+      } else Seq.empty[Setting[_]]
+    }
+
+    prepareSettings(PackageRegistryToken, PackageRegistryUri, "gitlab-prod") ++ releaseSettings
   }
 }

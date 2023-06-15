@@ -36,12 +36,12 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
       val registryUri   = EnvVariableHelper.getRequiredEnvironmentVariable(uriName)
       val registryToken = EnvVariableHelper.getRequiredEnvironmentVariable(tokenName)
 
-      val authentication = authentication(registryToken)
+      val registryAuthentication = authentication(registryToken)
 
       Seq(
         resolvers += MavenRepository(registryName, registryUri),
-        csrConfiguration ~= (_.addRepositoryAuthentication(registryName, authentication)),
-        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(registryName, authentication)),
+        csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
+        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
         publishMavenStyle := true,
         aether.AetherKeys.aetherCustomHttpHeaders := Map(CustomAuthHeader -> registryToken)
       )

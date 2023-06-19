@@ -50,12 +50,9 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
     }
 
     val releaseSettings =
-      if (EnvVariableHelper.getEnvironmentVariable(PackageReleasesRegistryToken).nonEmpty)
+      if (GitBranchHelper.isReleaseBranch || GitBranchHelper.isUpdateReleaseBranch)
         prepareSettings(PackageReleasesRegistryToken, PackageReleasesRegistryUri, PackageReleasesRegistryName)
-      else if (GitBranchHelper.isReleaseBranch) {
-        println(s"$PackageReleasesRegistryToken could not be found. Make your releases/* branch protected")
-        Seq.empty[Setting[_]]
-      } else Seq.empty[Setting[_]]
+      else Seq.empty[Setting[_]]
 
     prepareSettings(PackageRegistryToken, PackageRegistryUri, PackageRegistryName) ++ releaseSettings
   }

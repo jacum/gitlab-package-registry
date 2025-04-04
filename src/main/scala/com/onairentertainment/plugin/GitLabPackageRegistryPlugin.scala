@@ -8,17 +8,28 @@ import sbt.{AutoPlugin, PluginTrigger, Setting}
 
 object GitLabPackageRegistryPlugin extends AutoPlugin {
 
-  val PackageRegistryUri       = "PACKAGES_RW_URI"
-  val PackageRegistryToken     = "PACKAGES_RW_TOKEN"
+  val PackageRegistryUri   = "PACKAGES_RW_URI"
+  val PackageRegistryToken =
+    if (sys.env.contains("CI")) "CI_JOB_TOKEN"
+    else "PACKAGES_RW_TOKEN"
   val PackageRegistryName      = "gitlab-prod"
   val PackageRegistryProjectId = 71
 
-  val PackageReleasesRegistryUri       = "PACKAGES_LIVE_RW_URI"
-  val PackageReleasesRegistryToken     = "PACKAGES_LIVE_RW_TOKEN"
+  val PackageReleasesRegistryUri   = "PACKAGES_LIVE_RW_URI"
+  val PackageReleasesRegistryToken =
+    if (sys.env.contains("CI")) "CI_JOB_TOKEN"
+    else "PACKAGES_LIVE_RW_TOKEN"
   val PackageReleasesRegistryName      = "gitlab-releases"
   val PackageReleasesRegistryProjectId = 390
 
-  val CustomAuthHeader = "Private-Token"
+
+  val CustomAuthHeader =
+    if (sys.env.contains("CI")) "Job-Token"
+    else "Private-Token"
+
+  println(s"$PackageRegistryToken env variable is used to auth against $PackageRegistryUri")
+  println(s"$PackageReleasesRegistryToken env variable is used to auth against $PackageReleasesRegistryUri")
+  println(s"$CustomAuthHeader is used as an auth header")
 
   override def trigger: PluginTrigger = allRequirements
 

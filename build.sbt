@@ -8,7 +8,7 @@ val commonSettings = Seq(
   autoCompilerPlugins := true,
   sbtPlugin := true,
   organization := "nl.pragmasoft",
-  scalaVersion := "2.12.17",
+  scalaVersion := "2.12.19",
   scalacOptions := Seq(
     "-unchecked",
     "-deprecation",

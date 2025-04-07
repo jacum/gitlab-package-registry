@@ -18,15 +18,18 @@ object Publish {
         "GnuPG Key ID",
         "gpg",
         "E9F32B46ABCE86181ABDBF8ECE902ED363A2FA58", // key identifier
-        "ignored" // this field is ignored; passwords are supplied by pinentry
+        "ignored"                                   // this field is ignored; passwords are supplied by pinentry
       )
     ),
     sonatypeProfileName := "nl.pragmasoft",
     licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
     homepage := Some(url("https://github.com/jacum/gitlab-package-registry")),
-    scmInfo := Some(ScmInfo(
-      browseUrl = url("https://github.com/jacum/gitlab-package-registry"),
-      connection = "scm:git@github.com:jacum/gitlab-package-registry.git")),
+    scmInfo := Some(
+      ScmInfo(
+        browseUrl  = url("https://github.com/jacum/gitlab-package-registry"),
+        connection = "scm:git@github.com:jacum/gitlab-package-registry.git"
+      )
+    ),
     pomExtra := (
       <developers>
         <developer>
@@ -34,7 +37,7 @@ object Publish {
           <name>PragmaSoft</name>
         </developer>
       </developers>
-      ),
+    ),
     publishMavenStyle := true,
     publishTo := sonatypePublishToBundle.value,
     Test / publishArtifact := false,
@@ -58,12 +61,10 @@ object Publish {
     packageSrc / publishArtifact := false
   )
 
-
   val settings =
     if (sys.env.contains("USERNAME")) {
-      println(s"Releasing to Sonatype as ${ sys.env("USERNAME") }")
+      println(s"Releasing to Sonatype as ${sys.env("USERNAME")}")
       ReleaseToSonatype
-    }
-    else SuppressJavaDocsAndSources
+    } else SuppressJavaDocsAndSources
 
 }

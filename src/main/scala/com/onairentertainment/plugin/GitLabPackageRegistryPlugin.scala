@@ -2,7 +2,7 @@ package com.onairentertainment.plugin
 
 import lmcoursier.definitions.Authentication
 import lmcoursier.syntax.*
-import sbt.Keys.{csrConfiguration, publishMavenStyle, resolvers, updateClassifiers}
+import sbt.Keys.{csrConfiguration, publishMavenStyle, resolvers, updateClassifiers, updateSbtClassifiers}
 import sbt.librarymanagement.MavenRepository
 import sbt.{AutoPlugin, PluginTrigger, Setting}
 
@@ -55,6 +55,7 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
         resolvers += MavenRepository(registryName, registryUri),
         csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
         updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
+        updateSbtClassifiers / csrConfiguration := csrConfiguration.value,
         publishMavenStyle := true,
         aether.AetherKeys.aetherCustomHttpHeaders := Map(CustomAuthHeader -> registryToken)
       )

@@ -8,7 +8,7 @@ val commonSettings = Seq(
   autoCompilerPlugins := true,
   sbtPlugin := true,
   organization := "nl.pragmasoft",
-  scalaVersion := "2.12.19",
+  scalaVersion := "2.12.20",
   scalacOptions := Seq(
     "-unchecked",
     "-deprecation",
@@ -22,7 +22,7 @@ val commonSettings = Seq(
     "-Xfatal-warnings"
   ),
   addCompilerPlugin("com.olegpy"   %% "better-monadic-for" % "0.3.1"),
-  addCompilerPlugin("org.typelevel" % "kind-projector"     % "0.13.2" cross CrossVersion.full)
+  addCompilerPlugin("org.typelevel" % "kind-projector"     % "0.13.3" cross CrossVersion.full)
 ) ++ Publish.settings
 
 lazy val root = project

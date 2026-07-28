@@ -6,22 +6,13 @@ import xerial.sbt.Sonatype.SonatypeKeys._
 
 object Publish {
 
-  val ReleaseToSonatype = Seq(
-    credentials ++= Seq(
-      Credentials(
-        "Sonatype Nexus Repository Manager",
-        "oss.sonatype.org",
-        sys.env.getOrElse("USERNAME", ""),
-        sys.env.getOrElse("PASSWORD", "")
-      ),
-      Credentials(
-        "GnuPG Key ID",
-        "gpg",
-        "E9F32B46ABCE86181ABDBF8ECE902ED363A2FA58", // key identifier
-        "ignored"                                   // this field is ignored; passwords are supplied by pinentry
-      )
-    ),
-    sonatypeProfileName := "nl.pragmasoft",
+  val SuppressJavaDocsAndSources = Seq(
+    doc / sources := Seq(),
+    packageDoc / publishArtifact := false,
+    packageSrc / publishArtifact := false
+  )
+
+  private val pomSettings = Seq(
     licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
     homepage := Some(url("https://github.com/jacum/gitlab-package-registry")),
     scmInfo := Some(
@@ -39,32 +30,71 @@ object Publish {
       </developers>
     ),
     publishMavenStyle := true,
-    publishTo := sonatypePublishToBundle.value,
+    sbtPluginPublishLegacyMavenStyle := false,
     Test / publishArtifact := false,
     packageDoc / publishArtifact := true,
     packageSrc / publishArtifact := true,
-    pomIncludeRepository := (_ => false),
+    pomIncludeRepository := (_ => false)
+  )
+
+  val ReleaseToSonatype = pomSettings ++ Seq(
+    credentials ++= Seq(
+      Credentials(
+        "Sonatype Central",
+        "central.sonatype.com",
+        sys.env.getOrElse("SONATYPE_USER", ""),
+        sys.env.getOrElse("SONATYPE_PASSWORD", "")
+      ),
+      Credentials(
+        "GnuPG Key ID",
+        "gpg",
+        "80639E9F764EA1049652FDBBDA743228BD43ED35", // key identifier
+        "ignored"                                   // sbt-pgp uses PGP_PASSPHRASE; this field is ignored
+      )
+    ),
+    sonatypeProfileName := "nl.pragmasoft",
+    // Central Publishing Portal (OSSRH EOL)
+    sonatypeCredentialHost := "central.sonatype.com",
+    sonatypeRepository := "https://central.sonatype.com/api",
+    publishTo := sonatypePublishToBundle.value,
     releaseIgnoreUntrackedFiles := true,
     releaseProcess := Seq[ReleaseStep](
       checkSnapshotDependencies,
       inquireVersions,
       runClean,
-      //      runTest, // can't run test w/cross-version release
-      releaseStepCommandAndRemaining("+publishSigned"),
-      releaseStepCommand("sonatypeBundleRelease")
+      setReleaseVersion,
+      releaseStepCommand("sonatypeBundleClean"),
+      releaseStepCommand("publishSigned"),
+      releaseStepCommand("sonatypeCentralUpload"),
+      releaseStepCommand("sonatypeCentralRelease")
     )
   )
 
-  val SuppressJavaDocsAndSources = Seq(
-    doc / sources := Seq(),
-    packageDoc / publishArtifact := false,
-    packageSrc / publishArtifact := false
+  private val nexusRegistry = sys.env.get("NEXUS_REGISTRY")
+
+  val PublishToNexus: Seq[Def.Setting[_]] = pomSettings ++ Seq(
+    credentials ++= {
+      for {
+        registry <- nexusRegistry
+        username <- sys.env.get("NEXUS_USERNAME")
+        password <- sys.env.get("NEXUS_PASSWORD")
+      } yield Credentials("Sonatype Nexus Repository Manager", registry, username, password)
+    }.toSeq,
+    publishTo := nexusRegistry.map { registry =>
+      if (isSnapshot.value)
+        "snapshots" at s"https://$registry/repository/maven-snapshots/"
+      else
+        "releases" at s"https://$registry/repository/maven-releases/"
+    }
   )
 
   val settings =
-    if (sys.env.contains("USERNAME")) {
-      println(s"Releasing to Sonatype as ${sys.env("USERNAME")}")
+    if (sys.env.contains("SONATYPE_USER")) {
+      println(s"Releasing to Sonatype Central as ${sys.env("SONATYPE_USER")}")
       ReleaseToSonatype
+    } else if (nexusRegistry.isDefined) {
+      println(s"Publishing to Nexus at ${nexusRegistry.get}")
+      PublishToNexus
     } else SuppressJavaDocsAndSources
 
 }

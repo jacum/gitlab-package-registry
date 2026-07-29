@@ -1,5 +1,6 @@
 package com.onairentertainment.plugin
 
+import lmcoursier.CoursierConfiguration
 import lmcoursier.definitions.Authentication
 import lmcoursier.syntax.*
 import sbt.Keys.{csrConfiguration, publishMavenStyle, resolvers, updateClassifiers, updateSbtClassifiers}
@@ -8,20 +9,19 @@ import sbt.{AutoPlugin, PluginTrigger, Setting}
 
 object GitLabPackageRegistryPlugin extends AutoPlugin {
 
-  val PackageRegistryUri   = "PACKAGES_RW_URI"
+  val PackageRegistryUri = "PACKAGES_RW_URI"
   val PackageRegistryToken =
     if (sys.env.contains("CI")) "CI_JOB_TOKEN"
     else "PACKAGES_RW_TOKEN"
   val PackageRegistryName      = "gitlab-prod"
   val PackageRegistryProjectId = 71
 
-  val PackageReleasesRegistryUri   = "PACKAGES_LIVE_RW_URI"
+  val PackageReleasesRegistryUri = "PACKAGES_LIVE_RW_URI"
   val PackageReleasesRegistryToken =
     if (sys.env.contains("CI")) "CI_JOB_TOKEN"
     else "PACKAGES_LIVE_RW_TOKEN"
   val PackageReleasesRegistryName      = "gitlab-releases"
   val PackageReleasesRegistryProjectId = 390
-
 
   val CustomAuthHeader =
     if (sys.env.contains("CI")) "Job-Token"
@@ -50,12 +50,14 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
       val registryToken = EnvVariableHelper.getRequiredEnvironmentVariable(tokenName)
 
       val registryAuthentication = authentication(registryToken)
+      val withRegistryAuth: CoursierConfiguration => CoursierConfiguration =
+        _.addRepositoryAuthentication(registryName, registryAuthentication)
 
       Seq(
         resolvers += MavenRepository(registryName, registryUri),
-        csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
-        updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
-        updateSbtClassifiers / csrConfiguration := csrConfiguration.value,
+        csrConfiguration ~= withRegistryAuth,
+        updateClassifiers / csrConfiguration ~= withRegistryAuth,
+        updateSbtClassifiers / csrConfiguration ~= withRegistryAuth,
         publishMavenStyle := true,
         aether.AetherKeys.aetherCustomHttpHeaders := Map(CustomAuthHeader -> registryToken)
       )

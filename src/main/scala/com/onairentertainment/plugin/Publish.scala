@@ -11,8 +11,6 @@ import com.onairentertainment.plugin.GitLabPackageRegistryPlugin.{
 import sbt.Def
 import sbt.Keys.*
 
-import scala.sys.process.Process
-
 object Publish {
 
   private def publishSettings(packageToken: String, packageId: Int): Seq[Def.Setting[_]] = {

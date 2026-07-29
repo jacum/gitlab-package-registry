@@ -55,7 +55,7 @@ object GitLabPackageRegistryPlugin extends AutoPlugin {
         resolvers += MavenRepository(registryName, registryUri),
         csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
         updateClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
-        updateSbtClassifiers / csrConfiguration := csrConfiguration.value,
+        updateSbtClassifiers / csrConfiguration ~= (_.addRepositoryAuthentication(registryName, registryAuthentication)),
         publishMavenStyle := true,
         aether.AetherKeys.aetherCustomHttpHeaders := Map(CustomAuthHeader -> registryToken)
       )
